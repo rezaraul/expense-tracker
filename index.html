@@ -25,6 +25,19 @@
     </div>
   </div>
 
+  <div id="restorePrompt" class="restore-overlay hidden">
+    <div class="restore-card">
+      <div class="restore-icon">☁️</div>
+      <h2>No local data found</h2>
+      <p>This copy of the app has an empty local database. Restore an encrypted backup if your data exists on another app copy or device.</p>
+      <input id="restorePromptPassword" type="password" placeholder="Backup password" />
+      <label class="primary-btn file-label">Choose backup file
+        <input id="restorePromptFile" type="file" accept=".expensebackup,application/json" hidden />
+      </label>
+      <button id="dismissRestorePrompt" class="secondary-btn">Start empty</button>
+    </div>
+  </div>
+
   <main class="app-shell">
     <header class="topbar">
       <div>
@@ -37,6 +50,22 @@
         <button id="lockBtn" class="icon-btn" aria-label="Lock app">🔒</button>
       </div>
     </header>
+
+    <section id="backupReminder" class="backup-reminder hidden">
+      <div>
+        <strong>Protect your data</strong>
+        <p id="backupReminderText">Create an encrypted backup and save it to iCloud Drive.</p>
+      </div>
+      <button id="backupNowBtn" class="primary-btn compact">Back up</button>
+    </section>
+
+    <section class="data-location-card">
+      <div>
+        <p class="eyebrow">Storage</p>
+        <strong id="storageStatus">Stored locally in this app copy</strong>
+      </div>
+      <span id="lastBackupStatus" class="muted">No backup yet</span>
+    </section>
 
     <section class="toolbar-row">
       <select id="currencyFilter" aria-label="Currency"></select>
@@ -66,16 +95,12 @@
     </section>
 
     <section class="panel">
-      <div class="section-heading">
-        <div><p class="eyebrow">Budget</p><h2>Category limits</h2></div>
-      </div>
+      <div class="section-heading"><div><p class="eyebrow">Budget</p><h2>Category limits</h2></div></div>
       <div id="budgetList"></div>
     </section>
 
     <section class="panel">
-      <div class="section-heading">
-        <div><p class="eyebrow">Breakdown</p><h2>Categories</h2></div>
-      </div>
+      <div class="section-heading"><div><p class="eyebrow">Breakdown</p><h2>Categories</h2></div></div>
       <div id="categoryList"></div>
     </section>
 
@@ -134,21 +159,16 @@
         <h2>Manage</h2>
         <button id="closeManageDialog" class="icon-btn">×</button>
       </div>
-
       <section class="settings-section">
         <h3>Custom categories</h3>
         <div class="grid-3">
           <input id="categoryIconInput" maxlength="3" placeholder="🏦" />
           <input id="categoryNameInput" placeholder="Loan" />
-          <select id="categoryTypeInput">
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-          </select>
+          <select id="categoryTypeInput"><option value="expense">Expense</option><option value="income">Income</option></select>
         </div>
         <button id="addCategoryBtn" class="primary-btn">Add category</button>
         <div id="customCategoryList"></div>
       </section>
-
       <section class="settings-section">
         <h3>Monthly budgets</h3>
         <select id="budgetCategoryInput"></select>
@@ -156,7 +176,6 @@
         <select id="budgetCurrencyInput"></select>
         <button id="saveBudgetBtn" class="primary-btn">Save budget</button>
       </section>
-
       <section class="settings-section">
         <h3>Recurring items</h3>
         <div id="recurringList"></div>
@@ -170,16 +189,10 @@
         <h2>Settings & backup</h2>
         <button id="closeSettingsDialog" class="icon-btn">×</button>
       </div>
-
       <section class="settings-section">
         <h3>Appearance</h3>
-        <select id="themeSelect">
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
+        <select id="themeSelect"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
       </section>
-
       <section class="settings-section">
         <h3>App lock</h3>
         <p class="muted">Set a 4–8 digit PIN, and optionally enable Face ID / Touch ID using a passkey.</p>
@@ -195,26 +208,27 @@
         </div>
         <p id="pinMessage" class="muted"></p>
       </section>
-
       <section class="settings-section">
         <h3>Encrypted backup</h3>
-        <p class="muted">Create an encrypted file, then save it to iCloud Drive, Google Drive, OneDrive, or another private location.</p>
+        <p class="muted">Create an encrypted backup file, then choose iCloud Drive in the iPhone save dialog.</p>
         <input id="backupPassword" type="password" placeholder="Backup password (8+ characters)" />
         <div class="button-row">
-          <button id="exportBackupBtn" class="primary-btn">Export backup</button>
-          <label class="secondary-btn file-label">Import backup
+          <button id="exportBackupBtn" class="primary-btn">Create backup</button>
+          <label class="secondary-btn file-label">Restore backup
             <input id="importBackupInput" type="file" accept=".expensebackup,application/json" hidden />
           </label>
         </div>
         <p id="backupMessage" class="muted"></p>
       </section>
-
       <section class="settings-section">
-        <h3>Notifications</h3>
-        <p class="muted">Installed iPhone web apps can request notifications. Reminders are checked when the app opens.</p>
-        <button id="enableNotificationsBtn" class="primary-btn">Enable notifications</button>
+        <h3>Backup reminders</h3>
+        <select id="backupReminderDays">
+          <option value="3">Every 3 days</option>
+          <option value="7">Every 7 days</option>
+          <option value="14">Every 14 days</option>
+          <option value="30">Every 30 days</option>
+        </select>
       </section>
-
       <section class="settings-section">
         <h3>Data</h3>
         <div class="button-row">
@@ -232,14 +246,8 @@
         <h2>Reports</h2>
         <button id="closeReportDialog" class="icon-btn">×</button>
       </div>
-      <section class="settings-section">
-        <h3>12-month comparison</h3>
-        <div id="comparisonChart" class="comparison-chart"></div>
-      </section>
-      <section class="settings-section">
-        <h3>Top expense categories</h3>
-        <div id="reportCategories"></div>
-      </section>
+      <section class="settings-section"><h3>12-month comparison</h3><div id="comparisonChart" class="comparison-chart"></div></section>
+      <section class="settings-section"><h3>Top expense categories</h3><div id="reportCategories"></div></section>
     </div>
   </dialog>
 

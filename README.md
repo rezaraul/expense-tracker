@@ -1,24 +1,17 @@
-# Expense Tracker v3
+# Expense Tracker v4
 
-Major features:
-- Custom income and expense categories with custom emoji/icons
-- Built-in Loan category
-- Monthly recurring transactions
-- Monthly budgets by category
-- Receipt photo attachments stored locally
-- Multiple currencies: CAD, USD, EUR, GBP, IRR
-- PIN and optional passkey-based Face ID / Touch ID unlock
-- Dark mode
-- Search
-- Encrypted backup export/import
-- CSV export
-- Printable reports that can be saved as PDF
-- Monthly comparison reports
-- Notification permission and recurring-item reminders when the app opens
-- Offline PWA support
+This release adds:
+- Backup reminder banner
+- Empty-database restore prompt
+- Last-backup status
+- One-tap encrypted backup creation with the iOS share/save sheet
+- Manual iCloud Drive saving through the iPhone Files interface
+- Migration attempt from the Version 3 IndexedDB database
+- Clear notice that each Safari/Home Screen copy has separate local storage
+- Configurable backup reminders every 3, 7, 14, or 30 days
 
-## Important web-app limitations
-A GitHub Pages PWA cannot provide true native iPhone widgets, native Siri Shortcuts, or fully automatic background iCloud Drive backups. Encrypted backups can be saved manually to iCloud Drive through the iPhone share/save interface. Notifications are checked when the app opens; background scheduling depends on iOS and installed-PWA support.
+## Important
+A GitHub Pages web app cannot silently or automatically write to iCloud Drive in the background. Apple requires the user to choose the save destination. Version 4 opens the iPhone share/save flow so you can save the encrypted backup to iCloud Drive.
 
-## Updating GitHub Pages
-Upload all files to the root of your existing repository and replace the old files. GitHub Pages will redeploy automatically.
+## Updating
+Upload all files to the root of the existing GitHub repository and replace the existing files.

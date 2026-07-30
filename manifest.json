@@ -16,29 +16,5 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "shortcuts": [
-    {
-      "name": "Add expense",
-      "short_name": "Add expense",
-      "url": "./?action=add",
-      "icons": [
-        {
-          "src": "icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Reports",
-      "short_name": "Reports",
-      "url": "./?action=reports",
-      "icons": [
-        {
-          "src": "icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    }
   ]
 }
