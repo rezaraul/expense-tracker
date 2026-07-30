@@ -1,12 +1,248 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b5d4b"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="styles.css"><title>My Expenses</title></head><body>
-<div id="lock" class="overlay hidden"><section class="modal"><h1>🔒 My Expenses</h1><p>Enter your PIN.</p><input id="unlockPin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN"><button id="unlockBtn">Unlock</button><small id="unlockMsg"></small></section></div>
-<main><header><div><small>PERSONAL FINANCE</small><h1>Monthly Expenses</h1></div><div><button id="settingsBtn">⚙︎</button><button id="lockBtn">🔒</button></div></header>
-<nav><button id="prev">‹</button><div id="months"></div><button id="next">›</button></nav>
-<section class="summary"><span id="monthTitle"></span><strong id="balance">$0.00</strong><div class="twocol"><div>Income<b id="income">$0.00</b></div><div>Expenses<b id="expenses">$0.00</b></div></div></section>
-<section class="card"><small>YEAR AT A GLANCE</small><h2>Monthly spending</h2><div id="chart" class="chart"></div></section>
-<section class="card"><small>BREAKDOWN</small><h2>Categories</h2><div id="categories"></div></section>
-<section class="card"><div class="row"><div><small>ACTIVITY</small><h2>Transactions</h2></div><input id="search" placeholder="Search"></div><div id="transactions"></div></section></main>
-<button id="add" class="fab">+</button>
-<dialog id="txDialog"><form id="txForm"><div class="row"><h2>Add transaction</h2><button type="button" id="closeTx">×</button></div><label>Type<select id="type"><option value="expense">Expense</option><option value="income">Income</option></select></label><label>Amount (CAD)<input id="amount" type="number" min="0.01" step="0.01" required></label><label>Category<select id="category"></select></label><label>Description<input id="note" maxlength="80" required></label><label>Date<input id="date" type="date" required></label><button>Save</button></form></dialog>
-<dialog id="settingsDialog"><section class="settings"><div class="row"><h2>Settings & backup</h2><button id="closeSettings">×</button></div><h3>App lock</h3><p>Set a 4–8 digit PIN stored only on this device.</p><input id="pin1" type="password" inputmode="numeric" maxlength="8" placeholder="New PIN"><input id="pin2" type="password" inputmode="numeric" maxlength="8" placeholder="Confirm PIN"><div class="row"><button id="savePin">Save PIN</button><button id="removePin" class="secondary">Remove PIN</button></div><small id="pinMsg"></small><hr><h3>Encrypted backup</h3><p>Create an encrypted file and save it to iCloud Drive, Google Drive, or OneDrive.</p><input id="backupPass" type="password" placeholder="Backup password (8+ characters)"><div class="row"><button id="exportBtn">Export</button><label class="secondary file">Import<input id="importFile" hidden type="file" accept=".expensebackup,application/json"></label></div><small id="backupMsg"></small><hr><button id="clearBtn" class="danger">Delete all transactions</button></section></dialog>
-<script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b5d4b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="My Expenses" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>My Expenses</title>
+</head>
+<body>
+  <div id="lockScreen" class="lock-screen hidden">
+    <div class="lock-card">
+      <div class="lock-icon">🔒</div>
+      <h1>My Expenses</h1>
+      <p>Unlock with Face ID / Touch ID or your PIN.</p>
+      <button id="biometricUnlockBtn" class="primary-btn hidden">Use Face ID / Touch ID</button>
+      <input id="unlockPin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN" />
+      <button id="unlockBtn" class="secondary-btn">Unlock with PIN</button>
+      <p id="unlockError" class="error-text"></p>
+    </div>
+  </div>
+
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Personal finance</p>
+        <h1>Monthly Expenses</h1>
+      </div>
+      <div class="top-actions">
+        <button id="reportBtn" class="icon-btn" aria-label="Reports">📊</button>
+        <button id="settingsBtn" class="icon-btn" aria-label="Settings">⚙︎</button>
+        <button id="lockBtn" class="icon-btn" aria-label="Lock app">🔒</button>
+      </div>
+    </header>
+
+    <section class="toolbar-row">
+      <select id="currencyFilter" aria-label="Currency"></select>
+      <button id="manageBtn" class="secondary-btn compact">Manage</button>
+    </section>
+
+    <section class="month-row">
+      <button id="prevMonth" class="month-arrow" aria-label="Previous month">‹</button>
+      <div id="monthScroller" class="month-scroller"></div>
+      <button id="nextMonth" class="month-arrow" aria-label="Next month">›</button>
+    </section>
+
+    <section class="summary-card">
+      <p id="summaryMonth" class="summary-label"></p>
+      <div id="balance" class="balance">$0.00</div>
+      <div class="summary-grid">
+        <div><span>Income</span><strong id="incomeTotal">$0.00</strong></div>
+        <div><span>Expenses</span><strong id="expenseTotal">$0.00</strong></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">Year at a glance</p><h2>Monthly spending</h2></div>
+      </div>
+      <div id="yearChart" class="year-chart"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">Budget</p><h2>Category limits</h2></div>
+      </div>
+      <div id="budgetList"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">Breakdown</p><h2>Categories</h2></div>
+      </div>
+      <div id="categoryList"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">Activity</p><h2>Transactions</h2></div>
+        <input id="searchInput" class="search-input" placeholder="Search" />
+      </div>
+      <div id="transactionList"></div>
+    </section>
+  </main>
+
+  <button id="addBtn" class="floating-btn" aria-label="Add transaction">+</button>
+
+  <dialog id="transactionDialog">
+    <form id="transactionForm">
+      <div class="dialog-header">
+        <h2>Add transaction</h2>
+        <button type="button" id="closeTransactionDialog" class="icon-btn">×</button>
+      </div>
+      <label>Type
+        <select id="typeInput" required>
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+      </label>
+      <label>Amount
+        <input id="amountInput" type="number" inputmode="decimal" min="0.01" step="0.01" required />
+      </label>
+      <label>Currency
+        <select id="currencyInput" required></select>
+      </label>
+      <label>Category
+        <select id="categoryInput" required></select>
+      </label>
+      <label>Description
+        <input id="descriptionInput" type="text" maxlength="100" required />
+      </label>
+      <label>Date
+        <input id="dateInput" type="date" required />
+      </label>
+      <label>Receipt photo (optional)
+        <input id="receiptInput" type="file" accept="image/*" capture="environment" />
+      </label>
+      <label class="checkbox-row">
+        <input id="recurringInput" type="checkbox" />
+        Repeat monthly
+      </label>
+      <button class="primary-btn" type="submit">Save transaction</button>
+    </form>
+  </dialog>
+
+  <dialog id="manageDialog">
+    <div class="settings-wrap">
+      <div class="dialog-header">
+        <h2>Manage</h2>
+        <button id="closeManageDialog" class="icon-btn">×</button>
+      </div>
+
+      <section class="settings-section">
+        <h3>Custom categories</h3>
+        <div class="grid-3">
+          <input id="categoryIconInput" maxlength="3" placeholder="🏦" />
+          <input id="categoryNameInput" placeholder="Loan" />
+          <select id="categoryTypeInput">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </div>
+        <button id="addCategoryBtn" class="primary-btn">Add category</button>
+        <div id="customCategoryList"></div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Monthly budgets</h3>
+        <select id="budgetCategoryInput"></select>
+        <input id="budgetAmountInput" type="number" min="0" step="0.01" placeholder="Budget amount" />
+        <select id="budgetCurrencyInput"></select>
+        <button id="saveBudgetBtn" class="primary-btn">Save budget</button>
+      </section>
+
+      <section class="settings-section">
+        <h3>Recurring items</h3>
+        <div id="recurringList"></div>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <div class="settings-wrap">
+      <div class="dialog-header">
+        <h2>Settings & backup</h2>
+        <button id="closeSettingsDialog" class="icon-btn">×</button>
+      </div>
+
+      <section class="settings-section">
+        <h3>Appearance</h3>
+        <select id="themeSelect">
+          <option value="system">System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </section>
+
+      <section class="settings-section">
+        <h3>App lock</h3>
+        <p class="muted">Set a 4–8 digit PIN, and optionally enable Face ID / Touch ID using a passkey.</p>
+        <input id="newPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="New PIN" />
+        <input id="confirmPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="Confirm PIN" />
+        <div class="button-row">
+          <button id="savePinBtn" class="primary-btn">Save PIN</button>
+          <button id="removePinBtn" class="secondary-btn">Remove PIN</button>
+        </div>
+        <div class="button-row">
+          <button id="enableBiometricBtn" class="primary-btn">Enable Face ID / Touch ID</button>
+          <button id="disableBiometricBtn" class="secondary-btn">Disable biometric</button>
+        </div>
+        <p id="pinMessage" class="muted"></p>
+      </section>
+
+      <section class="settings-section">
+        <h3>Encrypted backup</h3>
+        <p class="muted">Create an encrypted file, then save it to iCloud Drive, Google Drive, OneDrive, or another private location.</p>
+        <input id="backupPassword" type="password" placeholder="Backup password (8+ characters)" />
+        <div class="button-row">
+          <button id="exportBackupBtn" class="primary-btn">Export backup</button>
+          <label class="secondary-btn file-label">Import backup
+            <input id="importBackupInput" type="file" accept=".expensebackup,application/json" hidden />
+          </label>
+        </div>
+        <p id="backupMessage" class="muted"></p>
+      </section>
+
+      <section class="settings-section">
+        <h3>Notifications</h3>
+        <p class="muted">Installed iPhone web apps can request notifications. Reminders are checked when the app opens.</p>
+        <button id="enableNotificationsBtn" class="primary-btn">Enable notifications</button>
+      </section>
+
+      <section class="settings-section">
+        <h3>Data</h3>
+        <div class="button-row">
+          <button id="exportCsvBtn" class="secondary-btn">Export CSV</button>
+          <button id="printReportBtn" class="secondary-btn">Print / Save PDF</button>
+        </div>
+        <button id="clearDataBtn" class="danger-btn">Delete all app data</button>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="reportDialog">
+    <div class="settings-wrap">
+      <div class="dialog-header">
+        <h2>Reports</h2>
+        <button id="closeReportDialog" class="icon-btn">×</button>
+      </div>
+      <section class="settings-section">
+        <h3>12-month comparison</h3>
+        <div id="comparisonChart" class="comparison-chart"></div>
+      </section>
+      <section class="settings-section">
+        <h3>Top expense categories</h3>
+        <div id="reportCategories"></div>
+      </section>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
