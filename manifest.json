@@ -1,6 +1,6 @@
 {
-  "name": "My Monthly Expenses",
-  "short_name": "My Expenses",
+  "name": "My Shared Expenses",
+  "short_name": "Expenses",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f4f6f5",

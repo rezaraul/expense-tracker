@@ -1,81 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b5d4b" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="My Expenses" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b5d4b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="My Expenses">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
   <title>My Expenses</title>
 </head>
 <body>
-  <div id="lockScreen" class="lock-screen hidden">
-    <div class="lock-card">
-      <div class="lock-icon">🔒</div>
-      <h1>My Expenses</h1>
-      <p>Unlock with Face ID / Touch ID or your PIN.</p>
-      <button id="biometricUnlockBtn" class="primary-btn hidden">Use Face ID / Touch ID</button>
-      <input id="unlockPin" type="password" inputmode="numeric" maxlength="8" placeholder="PIN" />
-      <button id="unlockBtn" class="secondary-btn">Unlock with PIN</button>
-      <p id="unlockError" class="error-text"></p>
-    </div>
-  </div>
-
-  <div id="restorePrompt" class="restore-overlay hidden">
-    <div class="restore-card">
-      <div class="restore-icon">☁️</div>
-      <h2>No local data found</h2>
-      <p>This copy of the app has an empty local database. Restore an encrypted backup if your data exists on another app copy or device.</p>
-      <input id="restorePromptPassword" type="password" placeholder="Backup password" />
-      <label class="primary-btn file-label">Choose backup file
-        <input id="restorePromptFile" type="file" accept=".expensebackup,application/json" hidden />
-      </label>
-      <button id="dismissRestorePrompt" class="secondary-btn">Start empty</button>
-    </div>
-  </div>
-
-  <main class="app-shell">
+  <main class="app-shell" id="reportArea">
     <header class="topbar">
       <div>
-        <p class="eyebrow">Personal finance</p>
+        <p class="eyebrow">Shared household finance</p>
         <h1>Monthly Expenses</h1>
       </div>
-      <div class="top-actions">
-        <button id="reportBtn" class="icon-btn" aria-label="Reports">📊</button>
-        <button id="settingsBtn" class="icon-btn" aria-label="Settings">⚙︎</button>
-        <button id="lockBtn" class="icon-btn" aria-label="Lock app">🔒</button>
+      <div class="top-actions no-export">
+        <button id="syncBtn" class="icon-btn" title="Sync">↻</button>
+        <button id="settingsBtn" class="icon-btn" title="Settings">⚙︎</button>
       </div>
     </header>
 
-    <section id="backupReminder" class="backup-reminder hidden">
+    <section id="cloudBanner" class="cloud-banner no-export">
       <div>
-        <strong>Protect your data</strong>
-        <p id="backupReminderText">Create an encrypted backup and save it to iCloud Drive.</p>
+        <strong id="cloudStatusTitle">Local mode</strong>
+        <p id="cloudStatusText">Data is stored only on this device until shared sync is configured.</p>
       </div>
-      <button id="backupNowBtn" class="primary-btn compact">Back up</button>
+      <button id="cloudSetupBtn" class="secondary-btn compact">Set up sync</button>
     </section>
 
-    <section class="data-location-card">
-      <div>
-        <p class="eyebrow">Storage</p>
-        <strong id="storageStatus">Stored locally in this app copy</strong>
-      </div>
-      <span id="lastBackupStatus" class="muted">No backup yet</span>
+    <section class="toolbar-row no-export">
+      <select id="currencyFilter"></select>
+      <button id="manageBtn" class="secondary-btn compact">Categories</button>
+      <button id="exportBtn" class="secondary-btn compact">Export</button>
     </section>
 
-    <section class="toolbar-row">
-      <select id="currencyFilter" aria-label="Currency"></select>
-      <button id="manageBtn" class="secondary-btn compact">Manage</button>
-    </section>
-
-    <section class="month-row">
-      <button id="prevMonth" class="month-arrow" aria-label="Previous month">‹</button>
+    <section class="month-row no-export">
+      <button id="prevMonth" class="month-arrow">‹</button>
       <div id="monthScroller" class="month-scroller"></div>
-      <button id="nextMonth" class="month-arrow" aria-label="Next month">›</button>
+      <button id="nextMonth" class="month-arrow">›</button>
     </section>
 
     <section class="summary-card">
@@ -88,15 +54,8 @@
     </section>
 
     <section class="panel">
-      <div class="section-heading">
-        <div><p class="eyebrow">Year at a glance</p><h2>Monthly spending</h2></div>
-      </div>
+      <div class="section-heading"><div><p class="eyebrow">Year at a glance</p><h2>Monthly spending</h2></div></div>
       <div id="yearChart" class="year-chart"></div>
-    </section>
-
-    <section class="panel">
-      <div class="section-heading"><div><p class="eyebrow">Budget</p><h2>Category limits</h2></div></div>
-      <div id="budgetList"></div>
     </section>
 
     <section class="panel">
@@ -107,13 +66,13 @@
     <section class="panel">
       <div class="section-heading">
         <div><p class="eyebrow">Activity</p><h2>Transactions</h2></div>
-        <input id="searchInput" class="search-input" placeholder="Search" />
+        <input id="searchInput" class="search-input no-export" placeholder="Search">
       </div>
       <div id="transactionList"></div>
     </section>
   </main>
 
-  <button id="addBtn" class="floating-btn" aria-label="Add transaction">+</button>
+  <button id="addBtn" class="floating-btn no-export">+</button>
 
   <dialog id="transactionDialog">
     <form id="transactionForm">
@@ -122,135 +81,93 @@
         <button type="button" id="closeTransactionDialog" class="icon-btn">×</button>
       </div>
       <label>Type
-        <select id="typeInput" required>
+        <select id="typeInput">
           <option value="expense">Expense</option>
           <option value="income">Income</option>
         </select>
       </label>
       <label>Amount
-        <input id="amountInput" type="number" inputmode="decimal" min="0.01" step="0.01" required />
+        <input id="amountInput" type="number" min="0.01" step="0.01" inputmode="decimal" required>
       </label>
       <label>Currency
-        <select id="currencyInput" required></select>
+        <select id="currencyInput"></select>
       </label>
       <label>Category
         <select id="categoryInput" required></select>
       </label>
+      <div id="categoryFallback" class="warning hidden">Repairing default categories…</div>
       <label>Description
-        <input id="descriptionInput" type="text" maxlength="100" required />
+        <input id="descriptionInput" maxlength="100" required>
       </label>
       <label>Date
-        <input id="dateInput" type="date" required />
+        <input id="dateInput" type="date" required>
       </label>
-      <label>Receipt photo (optional)
-        <input id="receiptInput" type="file" accept="image/*" capture="environment" />
-      </label>
-      <label class="checkbox-row">
-        <input id="recurringInput" type="checkbox" />
-        Repeat monthly
-      </label>
+      <label class="checkbox-row"><input id="recurringInput" type="checkbox"> Repeat monthly</label>
       <button class="primary-btn" type="submit">Save transaction</button>
     </form>
   </dialog>
 
   <dialog id="manageDialog">
     <div class="settings-wrap">
-      <div class="dialog-header">
-        <h2>Manage</h2>
-        <button id="closeManageDialog" class="icon-btn">×</button>
+      <div class="dialog-header"><h2>Categories</h2><button id="closeManageDialog" class="icon-btn">×</button></div>
+      <p class="muted">You can add anything: loan, mortgage, tuition, insurance, childcare, gifts, etc.</p>
+      <div class="grid-3">
+        <input id="categoryIconInput" maxlength="3" placeholder="🏦">
+        <input id="categoryNameInput" placeholder="Loan">
+        <select id="categoryTypeInput"><option value="expense">Expense</option><option value="income">Income</option></select>
       </div>
-      <section class="settings-section">
-        <h3>Custom categories</h3>
-        <div class="grid-3">
-          <input id="categoryIconInput" maxlength="3" placeholder="🏦" />
-          <input id="categoryNameInput" placeholder="Loan" />
-          <select id="categoryTypeInput"><option value="expense">Expense</option><option value="income">Income</option></select>
-        </div>
-        <button id="addCategoryBtn" class="primary-btn">Add category</button>
-        <div id="customCategoryList"></div>
-      </section>
-      <section class="settings-section">
-        <h3>Monthly budgets</h3>
-        <select id="budgetCategoryInput"></select>
-        <input id="budgetAmountInput" type="number" min="0" step="0.01" placeholder="Budget amount" />
-        <select id="budgetCurrencyInput"></select>
-        <button id="saveBudgetBtn" class="primary-btn">Save budget</button>
-      </section>
-      <section class="settings-section">
-        <h3>Recurring items</h3>
-        <div id="recurringList"></div>
-      </section>
+      <button id="addCategoryBtn" class="primary-btn">Add category</button>
+      <div id="customCategoryList"></div>
     </div>
   </dialog>
 
   <dialog id="settingsDialog">
     <div class="settings-wrap">
-      <div class="dialog-header">
-        <h2>Settings & backup</h2>
-        <button id="closeSettingsDialog" class="icon-btn">×</button>
-      </div>
+      <div class="dialog-header"><h2>Shared sync</h2><button id="closeSettingsDialog" class="icon-btn">×</button></div>
       <section class="settings-section">
-        <h3>Appearance</h3>
-        <select id="themeSelect"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+        <h3>1. Supabase project</h3>
+        <p class="muted">Paste the Project URL and the public anon/publishable key. Never use the service-role key.</p>
+        <input id="supabaseUrl" placeholder="https://xxxx.supabase.co">
+        <input id="supabaseAnonKey" placeholder="Public anon / publishable key">
+        <button id="saveCloudConfigBtn" class="secondary-btn">Save configuration</button>
       </section>
       <section class="settings-section">
-        <h3>App lock</h3>
-        <p class="muted">Set a 4–8 digit PIN, and optionally enable Face ID / Touch ID using a passkey.</p>
-        <input id="newPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="New PIN" />
-        <input id="confirmPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="Confirm PIN" />
+        <h3>2. Your account</h3>
+        <input id="authEmail" type="email" placeholder="Email">
+        <input id="authPassword" type="password" placeholder="Password">
         <div class="button-row">
-          <button id="savePinBtn" class="primary-btn">Save PIN</button>
-          <button id="removePinBtn" class="secondary-btn">Remove PIN</button>
+          <button id="signUpBtn" class="secondary-btn">Sign up</button>
+          <button id="signInBtn" class="primary-btn">Sign in</button>
         </div>
-        <div class="button-row">
-          <button id="enableBiometricBtn" class="primary-btn">Enable Face ID / Touch ID</button>
-          <button id="disableBiometricBtn" class="secondary-btn">Disable biometric</button>
-        </div>
-        <p id="pinMessage" class="muted"></p>
+        <button id="signOutBtn" class="secondary-btn">Sign out</button>
+        <p id="authMessage" class="muted"></p>
       </section>
       <section class="settings-section">
-        <h3>Encrypted backup</h3>
-        <p class="muted">Create an encrypted backup file, then choose iCloud Drive in the iPhone save dialog.</p>
-        <input id="backupPassword" type="password" placeholder="Backup password (8+ characters)" />
-        <div class="button-row">
-          <button id="exportBackupBtn" class="primary-btn">Create backup</button>
-          <label class="secondary-btn file-label">Restore backup
-            <input id="importBackupInput" type="file" accept=".expensebackup,application/json" hidden />
-          </label>
-        </div>
-        <p id="backupMessage" class="muted"></p>
-      </section>
-      <section class="settings-section">
-        <h3>Backup reminders</h3>
-        <select id="backupReminderDays">
-          <option value="3">Every 3 days</option>
-          <option value="7">Every 7 days</option>
-          <option value="14">Every 14 days</option>
-          <option value="30">Every 30 days</option>
-        </select>
-      </section>
-      <section class="settings-section">
-        <h3>Data</h3>
-        <div class="button-row">
-          <button id="exportCsvBtn" class="secondary-btn">Export CSV</button>
-          <button id="printReportBtn" class="secondary-btn">Print / Save PDF</button>
-        </div>
-        <button id="clearDataBtn" class="danger-btn">Delete all app data</button>
+        <h3>3. Shared household</h3>
+        <p class="muted">One person creates a household and gives the 6-character code to the other person.</p>
+        <input id="householdName" placeholder="Household name">
+        <button id="createHouseholdBtn" class="primary-btn">Create household</button>
+        <input id="joinCodeInput" placeholder="6-character household code">
+        <button id="joinHouseholdBtn" class="secondary-btn">Join household</button>
+        <p id="householdMessage" class="muted"></p>
       </section>
     </div>
   </dialog>
 
-  <dialog id="reportDialog">
+  <dialog id="exportDialog">
     <div class="settings-wrap">
-      <div class="dialog-header">
-        <h2>Reports</h2>
-        <button id="closeReportDialog" class="icon-btn">×</button>
-      </div>
-      <section class="settings-section"><h3>12-month comparison</h3><div id="comparisonChart" class="comparison-chart"></div></section>
-      <section class="settings-section"><h3>Top expense categories</h3><div id="reportCategories"></div></section>
+      <div class="dialog-header"><h2>Export</h2><button id="closeExportDialog" class="icon-btn">×</button></div>
+      <p class="muted">Exports include all currencies, transactions, categories, monthly summaries, and chart data.</p>
+      <button id="exportExcelBtn" class="primary-btn">Export Excel (.xlsx)</button>
+      <button id="exportPdfBtn" class="primary-btn">Export PDF with charts</button>
+      <button id="exportCsvBtn" class="secondary-btn">Export CSV</button>
+      <p id="exportMessage" class="muted"></p>
     </div>
   </dialog>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
