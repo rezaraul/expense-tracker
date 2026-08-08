@@ -43,7 +43,32 @@ async function uploadAllLocal(){for(const c of cats)await pushCategory(c);for(co
 async function signIn(){const d=await auth("token?grant_type=password",{email:$("authEmail").value,password:$("authPassword").value});cloud.accessToken=d.access_token;cloud.user=d.user;const s=sget();s.accessToken=d.access_token;ssave(s);$("authMessage").textContent="Signed in.";updateCloudBanner();if(cloud.householdId)await syncFromCloud()}
 async function signUp(){const d=await auth("signup",{email:$("authEmail").value,password:$("authPassword").value});$("authMessage").textContent=d.access_token?"Account created and signed in.":"Account created. Check your email if confirmation is enabled.";if(d.access_token){cloud.accessToken=d.access_token;cloud.user=d.user;const s=sget();s.accessToken=d.access_token;ssave(s);updateCloudBanner()}}
 async function createHousehold(){if(!cloud.user)await getUser();if(!cloud.user)throw new Error("Sign in first.");const name=$("householdName").value.trim();if(!name)throw new Error("Enter a household name.");const code=Math.random().toString(36).slice(2,8).toUpperCase();const rows=await rest("households",{method:"POST",headers:{"Prefer":"return=representation"},body:JSON.stringify({name,join_code:code,created_by:cloud.user.id})});const h=rows[0];await rest("household_members",{method:"POST",body:JSON.stringify({household_id:h.id,user_id:cloud.user.id})});cloud.householdId=h.id;const s=sget();s.householdId=h.id;ssave(s);$("householdMessage").textContent=`Created. Your wife's join code is: ${code}`;updateCloudBanner();await uploadAllLocal()}
-async function joinHousehold(){if(!cloud.user)await getUser();if(!cloud.user)throw new Error("Sign in first.");const code=$("joinCodeInput").value.trim().toUpperCase();const hs=await rest(`households?join_code=eq.${code}&select=*`);if(!hs.length)throw new Error("Code not found.");const h=hs[0];await rest("household_members",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates"},body:JSON.stringify({household_id:h.id,user_id:cloud.user.id})});cloud.householdId=h.id;const s=sget();s.householdId=h.id;ssave(s);$("householdMessage").textContent=`Joined ${h.name}.`;updateCloudBanner();await syncFromCloud()}
+async function joinHousehold(){
+  if(!cloud.user) await getUser();
+  if(!cloud.user) throw new Error("Sign in first.");
+  const code=$("joinCodeInput").value.trim().toUpperCase();
+  if(!code) throw new Error("Enter the 6-character household code.");
+
+  const r=await fetch(`${cloud.url}/rest/v1/rpc/join_household_by_code`,{
+    method:"POST",
+    headers:headers(true),
+    body:JSON.stringify({p_code:code})
+  });
+
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.message||d.error_description||"Could not join household.");
+  if(!Array.isArray(d)||!d.length) throw new Error("Code not found.");
+
+  const h=d[0];
+  cloud.householdId=h.household_id;
+  const s=sget();
+  s.householdId=cloud.householdId;
+  ssave(s);
+
+  $("householdMessage").textContent=`Joined ${h.household_name}.`;
+  updateCloudBanner();
+  await syncFromCloud();
+}
 
 function excelRows(){return txs.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(t=>({Date:t.date,Type:t.type,Amount:Number(t.amount),Currency:t.currency,Category:cat(t.categoryId).name,Description:t.note}))}
 function exportExcel(){
@@ -90,7 +115,7 @@ $("settingsBtn").onclick=()=>$("settingsDialog").showModal();$("cloudSetupBtn").
 $("saveCloudConfigBtn").onclick=()=>{const s=sget();s.supabaseUrl=$("supabaseUrl").value.trim().replace(/\/$/,"");s.supabaseAnonKey=$("supabaseAnonKey").value.trim();ssave(s);loadCloud();$("authMessage").textContent="Saved."}
 $("signInBtn").onclick=()=>signIn().catch(e=>$("authMessage").textContent=e.message);$("signUpBtn").onclick=()=>signUp().catch(e=>$("authMessage").textContent=e.message);$("signOutBtn").onclick=()=>{const s=sget();delete s.accessToken;delete s.householdId;ssave(s);cloud.accessToken="";cloud.householdId=null;cloud.user=null;updateCloudBanner();$("authMessage").textContent="Signed out."}
 $("createHouseholdBtn").onclick=()=>createHousehold().catch(e=>$("householdMessage").textContent=e.message);$("joinHouseholdBtn").onclick=()=>joinHousehold().catch(e=>$("householdMessage").textContent=e.message)
-$("syncBtn").onclick=()=>syncFromCloud().catch(e=>$("cloudStatusText").textContent="Sync failed: "+e.message)
+$("syncBtn").onclick=()=>syncFromCloud().then(()=>{$("cloudStatusText").textContent="Synced just now · V5.2 secure";}).catch(e=>$("cloudStatusText").textContent="Sync failed: "+e.message)
 $("exportBtn").onclick=()=>$("exportDialog").showModal();$("closeExportDialog").onclick=()=>$("exportDialog").close();$("exportExcelBtn").onclick=exportExcel;$("exportPdfBtn").onclick=exportPdf;$("exportCsvBtn").onclick=exportCsv;
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));
 (async()=>{db=await openDB();await ensureCategories();fillCurrencies();loadCloud();await getUser();await refresh();if(cloud.accessToken&&cloud.householdId)syncFromCloud().catch(()=>{})})()

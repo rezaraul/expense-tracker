@@ -32,3 +32,12 @@ Security:
 
 Exports:
 - Excel and PDF export libraries are loaded from public CDNs, so export needs internet access the first time those libraries load.
+
+
+## V5.1 security patch
+The Join Household action now uses the secure `join_household_by_code()` Supabase RPC from the corrected SQL setup. The app no longer searches household join codes directly.
+
+## V5.2 cache/sync fix
+- Forces a new service-worker cache so iPhones stop using the older V5 join-household JavaScript.
+- Keeps the secure `join_household_by_code()` RPC join method.
+- After uploading this version, fully close the Home Screen web app/Safari tab and reopen it.
